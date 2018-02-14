@@ -28,4 +28,11 @@ class Welcome extends CI_Controller {
 		}
 
 	}
+
+	public function dftHadir(){
+
+		$data['data'] = $this->M_Wedding->dftHadir();
+		$data['ndata'] = $this->M_Wedding->ndftHadir();
+		$this->load->view('kehadiran',$data);
+	}
 }

@@ -24,4 +24,18 @@ class M_Wedding extends CI_Model {
 			return FALSE;
 		}
 	}
+
+	public function dftHadir(){
+
+		$this->db->where('kehadiran','Y');
+		$query = $this->db->get('tamu');
+		return $query->result_array();
+	}
+
+	public function ndftHadir(){
+
+		$this->db->where('kehadiran','N');
+		$query = $this->db->get('tamu');
+		return $query->result_array();
+	}
 }

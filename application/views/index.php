@@ -6,24 +6,8 @@
 	<head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Wedding &mdash; 100% Free Fully Responsive HTML5 Template by qbootstrap.com</title>
+	<title>Wedding Thian & Nanda</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Free HTML5 Template by QBOOTSTRAP.COM" />
-	<meta name="keywords" content="free html5, free template, free bootstrap, html5, css3, mobile first, responsive" />
-	<meta name="author" content="QBOOTSTRAP.COM" />
-
-  <!--
-	//////////////////////////////////////////////////////
-
-	FREE HTML5 TEMPLATE
-	DESIGNED & DEVELOPED by QBOOTSTRAP.COM
-
-	Website: 		http://qbootstrap.com/
-	Email: 			info@qbootstrap.com
-	Twitter: 		http://twitter.com/Q_bootstrap
-	Facebook: 		https://www.facebook.com/Qbootstrap
-	//////////////////////////////////////////////////////
-	 -->
 
   	<!-- Facebook and Twitter integration -->
 	<meta property="og:title" content=""/>
@@ -80,7 +64,10 @@
 	        <div id="navbar" class="navbar-collapse collapse">
 	          <ul class="nav navbar-nav navbar-right">
 	            <li class="active"><a href="#" data-nav-section="home"><span>Home</span></a></li>
-	            <li><a href="#" data-nav-section="groom-bride"><span>Daftar Hadir</span></a></li>
+	            <li><a href="#" data-nav-section="rsvp">Cek Kehadiran</a></li>
+	            <li>
+	            	<a href="<?php echo base_url('index.php/Welcome/dftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Hadir</span></a>
+	            </li>
 	          </ul>
 	        </div>
 		    </nav>
@@ -116,7 +103,7 @@
 						<img src="<?php echo base_url('assets/images/flaticon/svg/005-two.svg');?>" class="svg" alt="Free HTML5 Bootstrap Template by QBootstrap.com">
 						<h2>Are Getting Married</h2>
 						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nam accusamus, sequi, minima repellendus explicabo magni aperiam, ducimus perferendis ad quidem suscipit omnis unde veritatis pariatur. Commodi, nisi. Iusto, accusantium a.</p>
-						<p><strong>on Dec 28, 2017 &mdash; Boracay, Philippines</strong></p>
+						<p><strong>on Dec 28, 2017 &mdash; Bandung, Indonesia</strong></p>
 					</div>
 				</div>
 			</div>
@@ -182,34 +169,40 @@
 				</div>
 			</div>
 			<div class="row animate-box">
-				<div class="col-md-10 col-md-offset-1">
+				<div class="col-md-4 col-md-offset-4">
+					<?php
+						if(isset($_GET['hadir'])){
+							$hadir = $_GET['hadir'];
+
+							if($hadir == 'Y'){
+					?>
+					
+					<div class="form-group">
+						<div class="alert alert-success alert-dismissible text-center" role="alert">
+						  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						  Kehadiran berhasil dikonfirmasi
+						</div>
+					</div>
+					
+					<?php
+							} else{
+					?>
+					<div class="form-group">
+						<div class="alert alert-danger alert-dismissible text-center" role="alert">
+						  Data tidak ditemukan!
+						  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						    <span aria-hidden="true">&times;</span>
+						  </button>
+						</div>
+					</div>	
+					<?php
+							}
+						}
+					?>
+				</div>
+				<div class="col-md-10 col-md-offset-3">
 					<form class="form-inline" method="post" action="<?php echo base_url('index.php/Welcome/cekHadir/'); ?>">
 						<div class="col-md-4 col-sm-4">
-							<?php
-								if(isset($_GET['hadir'])){
-									$hadir = $_GET['hadir'];
-
-									if($hadir == 'Y'){
-							?>
-							
-							<div class="form-group">
-								<div class="alert alert-success" role="alert">
-								  Kehadiran berhasil dikonfirmasi
-								</div>
-							</div>
-							
-							<?php
-									} else{
-							?>
-							<div class="form-group">
-								<div class="alert alert-danger" role="alert">
-								  Data tidak ditemukan!
-								</div>
-							</div>	
-							<?php
-									}
-								}
-							?>
 							<div class="form-group">
 								<label for="name" class="sr-only">Name</label>
 								<input type="name" class="form-control" id="name" placeholder="Name" name="nama">
@@ -247,26 +240,27 @@
 
 
 	<!-- jQuery -->
-	<script src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.min.js'); ?>"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/bootstrap.min.js'); ?>"></script>
 	<!-- jQuery Easing -->
-	<script src="js/jquery.easing.1.3.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.easing.1.3.js'); ?>"></script>
 	<!-- Bootstrap -->
-	<script src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/bootstrap.min.js'); ?>"></script>
 	<!-- Waypoints -->
-	<script src="js/jquery.waypoints.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.waypoints.min.js'); ?>"></script>
 	<!-- YTPlayer -->
-	<script src="js/jquery.mb.YTPlayer.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.mb.YTPlayer.min.js'); ?>"></script>
 	<!-- Flexslider -->
-	<script src="js/jquery.flexslider-min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.flexslider-min.js'); ?>"></script>
 	<!-- Owl Carousel -->
-	<script src="js/owl.carousel.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/owl.carousel.min.js'); ?>"></script>
 	<!-- Parallax -->
-	<script src="js/jquery.stellar.min.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.stellar.min.js'); ?>"></script>
 	<!-- Magnific Popup -->
-	<script src="js/jquery.magnific-popup.min.js"></script>
-	<script src="js/magnific-popup-options.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.magnific-popup.min.js'); ?>"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/magnific-popup-options.js'); ?>"></script>
 	<!-- Main JS (Do not remove) -->
-	<script src="js/main.js"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/main.js'); ?>"></script>
 
 	</body>
 </html>
