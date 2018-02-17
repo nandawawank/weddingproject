@@ -4,9 +4,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class M_Wedding extends CI_Model {
 
 
+
 	public function __construct(){
 		parent::__construct();
 		$this->load->database();
+	}
+
+	public function M_Wedding(){
+	  parent::Model(); 
 	}
 
 	public function cekHadir($nama){
@@ -25,17 +30,16 @@ class M_Wedding extends CI_Model {
 		}
 	}
 
-	public function dftHadir(){
 
-		$this->db->where('kehadiran','Y');
-		$query = $this->db->get('tamu');
-		return $query->result_array();
-	}
-
-	public function ndftHadir(){
-
-		$this->db->where('kehadiran','N');
-		$query = $this->db->get('tamu');
-		return $query->result_array();
-	}
+ 	public function get_live_items($search_data) {
+        $this->db->select("nama");
+        $this->db->from('tamu');
+        $this->db->group_start();
+        $this->db->like('nama', $search_data);
+        $this->db->group_end();
+        $this->db->limit(5);
+        $this->db->order_by("no", 'desc');
+        $query = $this->db->get();
+        return $query->result();
+    }
 }

@@ -5,7 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Daftar Kehadiran</title>
+	<title>Daftar Tidak Kehadiran</title>
 
 	<script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 	<script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
@@ -48,7 +48,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<div class="container">
 		<div class="row">
 			<div class="page-header">
-			  <h1>Daftar <small>Kehadiran</small></h1>
+			  <h1>Daftar <small>Ketidakhadiran</small></h1>
 			</div>
 
 			<div class="form-group">

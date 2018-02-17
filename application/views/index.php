@@ -38,13 +38,35 @@
 	<link rel="stylesheet" href="<?php echo base_url('assets/css/owl.theme.default.min.css');?>">
 	<!-- Magnific popup  -->
 	<link rel="stylesheet" href="<?php echo base_url('assets/css/magnific-popup.css');?>">
+	<link rel="stylesheet" href="<?php echo base_url('assets/css/flexslider.css');?>">
 	<!-- Bootstrap  -->
 	<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap.css');?>">
 
 	<link rel="stylesheet" href="<?php echo base_url('assets/css/style.css');?>">
 
+	<style type="text/css">
+		 #suggestions{
+                position: relative;
+                z-index: 9999;
+            }
+            #autoSuggestionsList > li {
+                background: none repeat scroll 0 0 #F3F3F3;
+                border-bottom: 1px solid #E3E3E3;
+                list-style: none outside none;
+                padding: 3px 15px 3px 15px;
+                text-align: left;
+            }
+            #autoSuggestionsList > li a {  color: #1d80c2; }
+            .auto_list {
+                border: 1px solid #E3E3E3;
+                border-radius: 5px 5px 5px 5px;
+                position: absolute;
+                width: 100%;
+            }
+	</style>
+
 	<!-- Modernizr JS -->
-	<script src="js/modernizr-2.6.2.min.js"></script>
+	<script src="<?php echo base_url('assets/js/modernizr-2.6.2.min.js');?>"></script>
 	<!-- FOR IE9 below -->
 	<!--[if lt IE 9]>
 	<script src="js/respond.min.js"></script>
@@ -68,6 +90,9 @@
 	            <li>
 	            	<a href="<?php echo base_url('index.php/Welcome/dftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Hadir</span></a>
 	            </li>
+	            <li>
+	            	<a href="<?php echo base_url('index.php/Welcome/ndftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Tidak Hadir</span></a>
+	            </li>
 	          </ul>
 	        </div>
 		    </nav>
@@ -76,7 +101,7 @@
 	</header>
 
 	<div class="qbootstrap-hero" data-section="home">
-		<div class="qbootstrap-overlay"></div>
+		<div class="qbootstrap-overlay" style="background-color: violet;"></div>
 		<div class="qbootstrap-cover text-center" data-stellar-background-ratio="0.5" style="background-image: url(images/cover_bg_3.jpg);">
 			<div class="display-t">
 				<div class="display-tc">
@@ -153,12 +178,11 @@
 <!-- SPACE BUAT MASUKIN DAFTAR HADIR -->
 
 	<div id="qbootstrap-started" class="qbootstrap-bg" data-section="rsvp" data-stellar-background-ratio="0.5" style="background-image: url(images/cover_bg_1.jpg);">
-		<div class="overlay"></div>
+		<div class="overlay" style="background-color: violet;"></div>
 		<div class="container">
 			<div class="row animate-box">
 				<div class="col-md-8 col-md-offset-2">
 					<div class="col-md-12 text-center section-heading svg-sm colored">
-						<img src="images/flaticon/svg/005-two.svg" class="svg" alt="Free HTML5 Bootstrap Template by QBootstrap.com">
 						<h2>You Are Invited</h2>
 						<div class="row">
 						<div class="col-md-10 col-md-offset-1 subtext">
@@ -205,7 +229,11 @@
 						<div class="col-md-4 col-sm-4">
 							<div class="form-group">
 								<label for="name" class="sr-only">Name</label>
-								<input type="name" class="form-control" id="name" placeholder="Name" name="nama">
+								<input type="text" class="form-control" id="search_data" placeholder="Name" name="name" onkeyup="liveSearch()" autocomplete="off">
+							   <div id="suggestions">
+                                    <div id="autoSuggestionsList">
+                                    </div>
+                                </div>
 							</div>
 						</div>
 						<div class="col-md-4 col-sm-4">
@@ -238,6 +266,28 @@
 		</div>
 	</footer>
 
+	<script type="text/javascript">
+        function liveSearch() {
+            var input_data = $('#search_data').val();
+            if (input_data.length === 0) {
+                $('#suggestions').hide();
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: "<?php echo base_url(); ?>index.php/welcome/search",
+                    data: {search_data: input_data},
+                    success: function (data) {
+                        // return success
+                        if (data.length > 0) {
+                            $('#suggestions').show();
+                            $('#autoSuggestionsList').addClass('auto_list');
+                            $('#autoSuggestionsList').html(data);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
 
 	<!-- jQuery -->
 	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.min.js'); ?>"></script>
@@ -259,8 +309,9 @@
 	<!-- Magnific Popup -->
 	<script type="text/javascript" src="<?php echo base_url('assets/js/jquery.magnific-popup.min.js'); ?>"></script>
 	<script type="text/javascript" src="<?php echo base_url('assets/js/magnific-popup-options.js'); ?>"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/respond.min.js'); ?>"></script>
 	<!-- Main JS (Do not remove) -->
-	<script type="text/javascript" src="<?php echo base_url('assets/js/main.js'); ?>"></script>
+	<script type="text/javascript" src="<?php echo base_url('assets/js/main.js');?>"></script>
 
 	</body>
 </html>

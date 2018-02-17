@@ -1,512 +1,274 @@
-<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
   /**
-  * Ignited Datatables
-  *
-  * This is a wrapper class/library based on the native Datatables server-side implementation by Allan Jardine
-  * found at http://datatables.net/examples/data_sources/server_side.html for CodeIgniter
+  * CIgniter DataTables
+  * CodeIgniter library for Datatables server-side processing / AJAX, easy to use :3
   *
   * @package    CodeIgniter
   * @subpackage libraries
-  * @category   library
-  * @version    0.6
-  * @author     Vincent Bambico <metal.conspiracy@gmail.com>
-  *             Yusuf Ozdemir <yusuf@ozdemir.be>
-  * @link       http://codeigniter.com/forums/viewthread/160896/
+  * @version    1.1 (development)
+  *
+  * @author     Izal Fathoni (izal.fat23@gmail.com)
+  * @link 		https://github.com/izalfat23/CIgniter-Datatables
   */
-  class Datatables
-  {
-    /**
-    * Global container variables for chained argument results
-    *
-    */
-    protected $ci;
-    protected $table;
-    protected $select         = array();
-    protected $joins          = array();
-    protected $columns        = array();
-    protected $where          = array();
-    protected $filter         = array();
-    protected $add_columns    = array();
-    protected $edit_columns   = array();
-    protected $unset_columns  = array();
+class Datatables
+{
+
+	private $CI;
+	private $searchable 	= array();
+	private $js_options 	= '';
+	private $style 			= '';
+	private $connection 	= 'default';
+
+	/**
+	 * Load the necessary library from codeigniter and caching the query
+	 * We use Codeigniter Active Record to generate query
+	 */
+	public function __construct()
+	{
+		$this->CI =& get_instance();
+
+		$this->_db = $this->CI->load->database($this->connection, TRUE);
+		$this->CI->load->helper('url');
+		$this->CI->load->library('table');
+
+		$this->query_builder = $this->_db;
+
+		$this->_db->start_cache();
+	}
+
+	public function __destruct()
+	{
+		$this->_db->stop_cache();
+		$this->_db->flush_cache();
+	}
+
+	/**
+	 * Select column want to fetch from database
+	 *
+	 * @param  string
+	 * @return object
+	 */
+	public function select($columns)
+	{
+		$this->_db->select($columns);
+
+		$this->searchable = $columns;
+		return $this;
+	}
+
+	public function from($table)
+	{
+		$this->_db->from($table);
+
+		$this->table = $table;
+		return $this->_db;
+	}
 
     /**
-    * Copies an instance of CI
-    */
-    public function __construct()
-    {
-      $this->ci =& get_instance();
-    }
+     * Initialize datatable id
+     *
+     * @param  string $id id attribute of table
+     * @return object     [description]
+     */
+	public function datatable($id)
+	{
+		$this->id = $id;
+		return $this;
+	}
 
-    /**
-    * Generates the SELECT portion of the query
-    *
-    * @param string $columns
-    * @param bool $backtick_protect
-    * @return mixed
-    */
-    public function select($columns, $backtick_protect = TRUE)
-    {
-      foreach($this->explode(',', $columns) as $val)
-      {
-        $column = trim(preg_replace('/(.*)\s+as\s+(\w*)/i', '$2', $val)); 
-        $this->columns[] =  $column;
-        $this->select[$column] =  trim(preg_replace('/(.*)\s+as\s+(\w*)/i', '$1', $val));
-      }
-      $this->ci->db->select($columns, $backtick_protect);
-      return $this;
-    }
+	public function style($data)
+	{
+		foreach ($data as $option => $value) {
+			$this->style .= "$option=\"$value\"";
+		}
 
-    /**
-    * Generates the FROM portion of the query
-    *
-    * @param string $table
-    * @return mixed
-    */
-    public function from($table)
-    {
-      $this->table = $table;
-      $this->ci->db->from($table);
-      return $this;
-    }
+		return $this;
+	}
 
-    /**
-    * Generates the JOIN portion of the query
-    *
-    * @param string $table
-    * @param string $fk
-    * @param string $type
-    * @return mixed
-    */
-    public function join($table, $fk, $type = NULL)
-    {
-      $this->joins[] = array($table, $fk, $type);
-      $this->ci->db->join($table, $fk, $type);
-      return $this;
-    }
+	/**
+	 * Set heading for the table
+	 *
+	 * @param  string $label    heading label
+	 * @param  string $source   column names
+	 * @param  method $function formatting the output
+	 * @return object
+	 */
+	public function column($label, $source, $function = null)
+	{
+		$this->table_heading[] 		= $label;
+		$this->columns[] 			= array($label, $source, $function);
 
-    /**
-    * Generates the WHERE portion of the query
-    *
-    * @param mixed $key_condition
-    * @param string $val
-    * @param bool $backtick_protect
-    * @return mixed
-    */
-    public function where($key_condition, $val = NULL, $backtick_protect = TRUE)
-    {
-      $this->where[] = array($key_condition, $val, $backtick_protect);
-      $this->ci->db->where($key_condition, $val, $backtick_protect);
-      return $this;
-    }
+		return $this;
+	}
 
-    /**
-    * Generates the WHERE portion of the query
-    *
-    * @param mixed $key_condition
-    * @param string $val
-    * @param bool $backtick_protect
-    * @return mixed
-    */
-    public function filter($key_condition, $val = NULL, $backtick_protect = TRUE)
-    {
-      $this->filter[] = array($key_condition, $val, $backtick_protect);
-      return $this;
-    }
+	/**
+	 * Initialize Datatables
+	 */
+	public function init()
+	{
+		if(isset($_REQUEST['draw']) && isset($_REQUEST['length']) && isset($_REQUEST['start']))
+		{
+			$this->json();
+			exit;
+		}
 
-    /**
-    * Sets additional column variables for adding custom columns
-    *
-    * @param string $column
-    * @param string $content
-    * @param string $match_replacement
-    * @return mixed
-    */
-    public function add_column($column, $content, $match_replacement = NULL)
-    {
-      $this->add_columns[$column] = array('content' => $content, 'replacement' => $this->explode(',', $match_replacement));
-      return $this;
-    }
+		$this->CI->table->set_template(array(
+			'table_open' => "<table id=\"$this->id\" $this->style>"
+		));
+		$this->CI->table->set_heading($this->table_heading);
 
-    /**
-    * Sets additional column variables for editing columns
-    *
-    * @param string $column
-    * @param string $content
-    * @param string $match_replacement
-    * @return mixed
-    */
-    public function edit_column($column, $content, $match_replacement)
-    {
-      $this->edit_columns[$column][] = array('content' => $content, 'replacement' => $this->explode(',', $match_replacement));
-      return $this;
-    }
+		$this->CI->datatables->id 		= $this->id;
+		$this->CI->datatables->js_options 	= $this->js_options;
+	}
 
-    /**
-    * Unset column
-    *
-    * @param string $column
-    * @return mixed
-    */
-    public function unset_column($column)
-    {
-      $this->unset_columns[] = $column;
-      return $this;
-    }
+	/**
+	 * Generate the datatables table (lol)
+	 *
+	 * @return html table
+	 */
+	public function generate()
+	{
+		echo $this->CI->table->generate();
+	}
 
-    /**
-    * Builds all the necessary query segments and performs the main query based on results set from chained statements
-    *
-    * @param string charset
-    * @return string
-    */
-    public function generate($charset = 'UTF-8')
-    {
-      $this->get_paging();
-      $this->get_ordering();
-      $this->get_filtering();
-      return $this->produce_output($charset);
-    }
+	/**
+	 * Set searchable columns from table
+	 *
+	 * @param  string $data columns name
+	 * @return object
+	 */
+	public function searchable($data)
+	{
+		$this->searchable = $data;
+		return $this;
+	}
 
-    /**
-    * Generates the LIMIT portion of the query
-    *
-    * @return mixed
-    */
-    protected function get_paging()
-    {
-      $iStart = $this->ci->input->post('iDisplayStart');
-      $iLength = $this->ci->input->post('iDisplayLength');
-      $this->ci->db->limit(($iLength != '' && $iLength != '-1')? $iLength : 10, ($iStart)? $iStart : 0);
-    }
+	/**
+	 *	Add options to datatables jquery
+	 *
+	 * @param array / string 	$option options name
+	 * @param string 			$value  value
+	 */
+	public function set_options($option, $value = null)
+	{
+		if(is_array($option)) {
+			foreach ($option as $opt => $value) {
+				$this->js_options .= "$opt: $value,\n";
+			}
+		} else {
+			$this->js_options .= "$option: $value,\n";
+		}
 
-    /**
-    * Generates the ORDER BY portion of the query
-    *
-    * @return mixed
-    */
-    protected function get_ordering()
-    {
-      if ($this->check_mDataprop())
-        $mColArray = $this->get_mDataprop();
-      elseif ($this->ci->input->post('sColumns'))
-        $mColArray = explode(',', $this->ci->input->post('sColumns'));
-      else
-        $mColArray = $this->columns;
+		return $this;
+	}
 
-      $mColArray = array_values(array_diff($mColArray, $this->unset_columns));
-      $columns = array_values(array_diff($this->columns, $this->unset_columns));
+	/**
+	 * Jquery for datatables
+	 *
+	 * @return javascript
+	 */
+	public function jquery()
+	{
+		$output = '
+		<script type="text/javascript" defer="defer">;
+			function createDatatable() {
+					erTable_'. $this->id .' = $("#'. $this->id .'").DataTable({
+					processing: true,
+					serverSide: true,
+					searchDelay: 500,
+					autoWidth : false,
+					' .$this->js_options. '
+					ajax: {
+						url: "'. site_url(uri_string()) .'",
+						type:"POST",
+						data: {},
+					},
+				});
+			};
 
-      for($i = 0; $i < intval($this->ci->input->post('iSortingCols')); $i++)
-        if(isset($mColArray[intval($this->ci->input->post('iSortCol_' . $i))]) && in_array($mColArray[intval($this->ci->input->post('iSortCol_' . $i))], $columns) && $this->ci->input->post('bSortable_'.intval($this->ci->input->post('iSortCol_' . $i))) == 'true')
-          $this->ci->db->order_by($mColArray[intval($this->ci->input->post('iSortCol_' . $i))], $this->ci->input->post('sSortDir_' . $i));
-    }
+			function refreshDatatable(){
+				' .$this->id. 'destroy();
+				createDatatable();
+			};
 
-    /**
-    * Generates the LIKE portion of the query
-    *
-    * @return mixed
-    */
-    protected function get_filtering()
-    {
-      if ($this->check_mDataprop())
-        $mColArray = $this->get_mDataprop();
-      elseif ($this->ci->input->post('sColumns'))
-        $mColArray = explode(',', $this->ci->input->post('sColumns'));
-      else
-        $mColArray = $this->columns;
+			createDatatable();
+		</script>';
 
-      $sWhere = '';
-      $sSearch = $this->ci->db->escape($this->ci->input->post('sSearch'));
+		echo $output;
+	}
 
-      $mColArray = array_values(array_diff($mColArray, $this->unset_columns));
-      $columns = array_values(array_diff($this->columns, $this->unset_columns));
+	/**
+	 * Generate JSON for datatables
+	 *
+	 * @return json
+	 */
+	public function json()
+	{
+		$draw		= $_REQUEST['draw'];
+		$length		= $_REQUEST['length'];
+		$start		= $_REQUEST['start'];
+		$order_by	= $_REQUEST['order'][0]['column'];
+		$order_dir	= $_REQUEST['order'][0]['dir'];
+		$search		= $_REQUEST['search']["value"];
 
-      if($sSearch != '')
-        for($i = 0; $i < count($mColArray); $i++)
-          if($this->ci->input->post('bSearchable_' . $i) == 'true' && in_array($mColArray[$i], $columns))
-            $sWhere .= $this->select[$mColArray[$i]] . " LIKE '%" . $sSearch . "%' OR ";
+		$output['data'] 	= array();
 
-      $sWhere = substr_replace($sWhere, '', -3);
+		if($this->searchable == '*') {
+			$field = $this->_db->list_fields($this->table);
+			$this->searchable = implode(',', $field);
+		}
 
-      if($sWhere != '')
-        $this->ci->db->where('(' . $sWhere . ')');
+		$column = explode(',', $this->searchable);
+		$this->searchable = array();
 
-      for($i = 0; $i < intval($this->ci->input->post('iColumns')); $i++)
-      {
-        if(isset($_POST['sSearch_' . $i]) && $this->ci->input->post('sSearch_' . $i) != '' && in_array($mColArray[$i], $columns))
-        {
-          $miSearch = explode(',', $this->ci->input->post('sSearch_' . $i));
-          foreach($miSearch as $val)
-          {
-            if(preg_match("/(<=|>=|=|<|>)(\s*)(.+)/i", trim($val), $matches))
-              $this->ci->db->where($this->select[$mColArray[$i]].' '.$matches[1], $matches[3]);
-            else
-              $this->ci->db->where($this->select[$mColArray[$i]].' LIKE', '%'.$val.'%');
-          }
-        }
-      }
+		foreach($column as $key => $col) {
+			$col = strtolower($col);
+			$col = str_replace(' ', '', $col);
+			$col = strstr($col, 'as', true) ?: $col;
+			$this->searchable[] = $col;
+		}
 
-      foreach($this->filter as $val)
-        $this->ci->db->where($val[0], $val[1], $val[2]);
-    }
+		if(is_array($this->searchable)) {
+			$this->searchable = implode(',', $this->searchable);
+		}
 
-    /**
-    * Compiles the select statement based on the other functions called and runs the query
-    *
-    * @return mixed
-    */
-    protected function get_display_result()
-    {
-      return $this->ci->db->get();
-    }
+		if($search != "") {
+			$this->_db->where("CONCAT($this->searchable) LIKE ('%$search%')");
+		}
 
-    /**
-    * Builds a JSON encoded string data
-    *
-    * @param string charset
-    * @return string
-    */
-    protected function produce_output($charset)
-    {
-      $aaData = array();
-      $rResult = $this->get_display_result();
-      $iTotal = $this->get_total_results();
-      $iFilteredTotal = $this->get_total_results(TRUE);
+		/** ---------------------------------------------------------------------- */
+		/** Count records in database */
+		/** ---------------------------------------------------------------------- */
 
-      foreach($rResult->result_array() as $row_key => $row_val)
-      {
-        $aaData[$row_key] = ($this->check_mDataprop())? $row_val : array_values($row_val);
+		$total = $this->_db->count_all_results();
 
-        foreach($this->add_columns as $field => $val)
-          if($this->check_mDataprop())
-            $aaData[$row_key][$field] = $this->exec_replace($val, $aaData[$row_key]);
-          else
-            $aaData[$row_key][] = $this->exec_replace($val, $aaData[$row_key]);
+		$output['query_count'] 	= $this->_db->last_query();
+		$output['recordsTotal'] = $output['recordsFiltered'] = $total;
 
-        foreach($this->edit_columns as $modkey => $modval)
-          foreach($modval as $val)
-            $aaData[$row_key][($this->check_mDataprop())? $modkey : array_search($modkey, $this->columns)] = $this->exec_replace($val, $aaData[$row_key]);
+		/** ---------------------------------------------------------------------- */
+		/** Generate JSON */
+		/** ---------------------------------------------------------------------- */
 
-        $aaData[$row_key] = array_diff_key($aaData[$row_key], ($this->check_mDataprop())? $this->unset_columns : array_intersect($this->columns, $this->unset_columns));
+		$this->_db->limit($length, $start);
+		$this->_db->order_by($this->columns[$order_by][1], $order_dir);
 
-        if(!$this->check_mDataprop())
-          $aaData[$row_key] = array_values($aaData[$row_key]);
-      }
+		$result 			= $this->_db->get()->result_array();
+		$output['query'] 	=  $this->_db->last_query();
 
-      $sColumns = array_diff($this->columns, $this->unset_columns);
-      $sColumns = array_merge_recursive($sColumns, array_keys($this->add_columns));
+		foreach ($result as $row) {
+			$arr = array();
+			foreach ($this->columns as $key => $column) {
+				$row_output = $row[$column[1]];
+				if(isset($this->columns[$key][2])){
+					$row_output = call_user_func_array($this->columns[$key][2], array($row_output, $row));
+				}
+				$arr[] = $row_output;
+			}
+			$output['data'][] = $arr;
+		}
 
-      $sOutput = array
-      (
-        'sEcho'                => intval($this->ci->input->post('sEcho')),
-        'iTotalRecords'        => $iTotal,
-        'iTotalDisplayRecords' => $iFilteredTotal,
-        'aaData'               => $aaData,
-        'sColumns'             => implode(',', $sColumns)
-      );
+		echo json_encode($output);
+	}
 
-      if(strtolower($charset) == 'utf-8')
-        return json_encode($sOutput);
-      else
-        return $this->jsonify($sOutput);
-    }
-
-    /**
-    * Get result count
-    *
-    * @return integer
-    */
-    protected function get_total_results($filtering = FALSE)
-    {
-      if($filtering)
-        $this->get_filtering();
-
-      foreach($this->joins as $val)
-        $this->ci->db->join($val[0], $val[1], $val[2]);
-
-      foreach($this->where as $val)
-        $this->ci->db->where($val[0], $val[1], $val[2]);
-
-      return $this->ci->db->count_all_results($this->table);
-    }
-
-    /**
-    * Runs callback functions and makes replacements
-    *
-    * @param mixed $custom_val
-    * @param mixed $row_data
-    * @return string $custom_val['content']
-    */
-    protected function exec_replace($custom_val, $row_data)
-    {
-      $replace_string = '';
-
-      if(isset($custom_val['replacement']) && is_array($custom_val['replacement']))
-      {
-        foreach($custom_val['replacement'] as $key => $val)
-        {
-          $sval = preg_replace("/(?<!\w)([\'\"])(.*)\\1(?!\w)/i", '$2', trim($val));
-          if(preg_match('/(\w+)\((.*)\)/i', $val, $matches) && function_exists($matches[1]))
-          {
-            $func = $matches[1];
-            $args = preg_split("/[\s,]*\\\"([^\\\"]+)\\\"[\s,]*|" . "[\s,]*'([^']+)'[\s,]*|" . "[,]+/", $matches[2], 0, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-
-            foreach($args as $args_key => $args_val)
-            {
-              $args_val = preg_replace("/(?<!\w)([\'\"])(.*)\\1(?!\w)/i", '$2', trim($args_val));
-              $args[$args_key] = (in_array($args_val, $this->columns))? ($row_data[($this->check_mDataprop())? $args_val : array_search($args_val, $this->columns)]) : $args_val;
-            }
-
-            $replace_string = call_user_func_array($func, $args);
-          }
-          elseif(in_array($sval, $this->columns))
-            $replace_string = $row_data[($this->check_mDataprop())? $sval : array_search($sval, $this->columns)];
-          else
-            $replace_string = $sval;
-
-          $custom_val['content'] = str_ireplace('$' . ($key + 1), $replace_string, $custom_val['content']);
-        }
-      }
-
-      return $custom_val['content'];
-    }
-
-    /**
-    * Check mDataprop
-    *
-    * @return bool
-    */
-    protected function check_mDataprop()
-    {
-      if (!$this->ci->input->post('mDataProp_0')) return FALSE;
-
-      for($i = 0; $i < intval($this->ci->input->post('iColumns')); $i++)
-        if(!is_numeric($this->ci->input->post('mDataProp_' . $i)))
-          return TRUE;
-
-      return FALSE;
-    }
-
-    /**
-    * Get mDataprop order
-    *
-    * @return mixed
-    */
-    protected function get_mDataprop()
-    {
-      $mDataProp = array();
-
-      for($i = 0; $i < intval($this->ci->input->post('iColumns')); $i++)
-        $mDataProp[] = $this->ci->input->post('mDataProp_' . $i);
-
-      return $mDataProp;
-    }
-
-    /**
-    * Return the difference of open and close characters
-    *
-    * @param string $str
-    * @param string $open
-    * @param string $close
-    * @return string $retval
-    */
-    protected function balanceChars($str, $open, $close)
-    {
-      $openCount = substr_count($str, $open);
-      $closeCount = substr_count($str, $close);
-      $retval = $openCount - $closeCount;
-      return $retval;
-    }
-
-    /**
-    * Explode, but ignore delimiter until closing characters are found
-    *
-    * @param string $delimiter
-    * @param string $str
-    * @param string $open
-    * @param string $close
-    * @return mixed $retval
-    */
-    protected function explode($delimiter, $str, $open='(', $close=')') 
-    {
-      $retval = array();
-      $hold = array();
-      $balance = 0;
-      $parts = explode($delimiter, $str);
-
-      foreach ($parts as $part) 
-      {
-        $hold[] = $part;
-        $balance += $this->balanceChars($part, $open, $close);
-        if ($balance < 1)
-        {
-          $retval[] = implode($delimiter, $hold);
-          $hold = array();
-          $balance = 0;
-        }
-      }
-
-      if (count($hold) > 0)
-        $retval[] = implode($delimiter, $hold);
-
-      return $retval;
-    }
-
-    /**
-    * Workaround for json_encode's UTF-8 encoding if a different charset needs to be used
-    *
-    * @param mixed result
-    * @return string
-    */
-    protected function jsonify($result = FALSE)
-    {
-      if(is_null($result)) return 'null';
-      if($result === FALSE) return 'false';
-      if($result === TRUE) return 'true';
-
-      if(is_scalar($result))
-      {
-        if(is_float($result))
-          return floatval(str_replace(',', '.', strval($result)));
-
-        if(is_string($result))
-        {
-          static $jsonReplaces = array(array('\\', '/', '\n', '\t', '\r', '\b', '\f', '"'), array('\\\\', '\\/', '\\n', '\\t', '\\r', '\\b', '\\f', '\"'));
-          return '"' . str_replace($jsonReplaces[0], $jsonReplaces[1], $result) . '"';
-        }
-        else
-          return $result;
-      }
-
-      $isList = TRUE;
-
-      for($i = 0, reset($result); $i < count($result); $i++, next($result))
-      {
-        if(key($result) !== $i)
-        {
-          $isList = FALSE;
-          break;
-        }
-      }
-
-      $json = array();
-
-      if($isList)
-      {
-        foreach($result as $value)
-          $json[] = $this->jsonify($value);
-
-        return '[' . join(',', $json) . ']';
-      }
-      else
-      {
-        foreach($result as $key => $value)
-          $json[] = $this->jsonify($key) . ':' . $this->jsonify($value);
-
-        return '{' . join(',', $json) . '}';
-      }
-    }
-  }
-/* End of file Datatables.php */
-/* Location: ./application/libraries/Datatables.php */
+}
