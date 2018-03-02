@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Welcome extends CI_Controller {
+class Daftar extends CI_Controller {
 
 
 	public function __construct(){
@@ -9,37 +9,6 @@ class Welcome extends CI_Controller {
 		$this->load->database();
 		$this->load->library('datatables');
 		$this->load->model('M_Wedding');
-	}
-
-	public function index()
-	{
-		$this->load->view('index');
-	}
-
-	public function search() {
-        $search_data = $_POST['search_data'];
-        $query = $this->M_Wedding->get_live_items($search_data);
-        foreach ($query as $row):
-    ?>
-    	<li onClick="selectCountry('<?php echo $row->nama; ?>');"><?php echo $row->nama; ?></li>
-    <?php            
-        endforeach;
-    }
-
-
-	public function cekHadir(){
-
-		$nama = $this->input->post('name');
-
-		
-		if($this->M_Wedding->cekHadir($nama) == TRUE){
-			
-			redirect('Welcome?hadir=Y');
-		} else{
-
-			redirect('Welcome?=hadir=N');
-		}
-
 	}
 
 	public function dftHadir(){

@@ -88,10 +88,10 @@
 	            <li class="active"><a href="#" data-nav-section="home"><span>Home</span></a></li>
 	            <li><a href="#" data-nav-section="rsvp">Cek Kehadiran</a></li>
 	            <li>
-	            	<a href="<?php echo base_url('index.php/Welcome/dftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Hadir</span></a>
+	            	<a href="<?php echo base_url('index.php/Daftar/dftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Hadir</span></a>
 	            </li>
 	            <li>
-	            	<a href="<?php echo base_url('index.php/Welcome/ndftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Tidak Hadir</span></a>
+	            	<a href="<?php echo base_url('index.php/Daftar/ndftHadir'); ?>" data-nav-section="groom-bride" target="_blank"><span>Daftar Tidak Hadir</span></a>
 	            </li>
 	          </ul>
 	        </div>
@@ -287,6 +287,11 @@
                 });
             }
         }
+
+        function selectCountry(thisValue) {
+		    $('#search_data').val(thisValue);
+		    setTimeout("$('#suggestions').hide();", 200);
+		}   
     </script>
 
 	<!-- jQuery -->
